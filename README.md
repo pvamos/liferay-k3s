@@ -6,7 +6,7 @@
 ## Deploy Liferay Community Edition (CE) Portal to a K3s Kubernetes cluster runnig on Alpine linux
 
 
-***Simple Kubernetes YAML Manifests and a bash script to deploy a Liferay CE Portal 7.3 Development environment to K3s v1.27.5 custer running on Alpine Linux 3.18 nodes. Development environment with real Kubernetes to evaluate Liferay Portal features, in a very resource effective way.***
+***Simple Kubernetes YAML Manifests and a bash script to deploy a Liferay CE Portal 7.3 Development environment to a K3s v1.27.5 custer running on Alpine Linux 3.18 nodes. Development environment with real Kubernetes to evaluate Liferay Portal features, in a very resource effectient way.***
 
 ![liferay-k3s Liferay Portal illustration](images/liferay-portal.png)
 
@@ -88,7 +88,7 @@ I use 2 small OVH VPS-es as a HA Active/Standby HAProxy setup in front of the 3 
 
 I also use them for the "published workloads" running on Kubernetes.
 
-The 2 HAProxy hosts share 2 a floating IP with Keepalived.
+The 2 HAProxy hosts share 2 a floating IP-s with Keepalived.
 
 -  one for the K8s API server
 
@@ -355,7 +355,7 @@ liferay-search-6d46bb947d-zft4v   1/1     Running   0          3h12m   10.42.4.1
 
 ```
 
-### Full Liferay CE Portal startup log at the end of this `README.md`
+### See full Liferay CE Portal startup log at the end of this `README.md`
 
 
 ## Tear down

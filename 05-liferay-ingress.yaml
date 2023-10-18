@@ -1,0 +1,26 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: liferay-ingress
+  namespace: liferay
+  labels:
+    app: liferay
+    tier: ingress
+  annotations:
+    ingress.kubernetes.io/ssl-redirect: "false"
+spec:
+  ingressClassName: "traefik"
+  rules:
+  - host: liferay.pvamos.net
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: liferay-portal
+            port:
+              number: 8080
+
+

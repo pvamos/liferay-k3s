@@ -1,0 +1,53 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: liferay-nginx
+  namespace: liferay
+  labels:
+    app: liferay
+    tier: nginx
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8081
+  selector:
+    app: liferay
+    tier: nginx
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: liferay-nginx
+  namespace: liferay
+  labels:
+    app: liferay
+    tier: nginx
+spec:
+  selector:
+    matchLabels:
+      app: liferay
+      tier: nginx
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      namespace: liferay
+      labels:
+        app: liferay
+        tier: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.25.2
+        ports:
+        - containerPort: 8081 
+          name: nginx
+        volumeMounts:
+        - name: nginx-config
+          subPath: nginx.conf
+          mountPath: /etc/nginx/nginx.conf
+      volumes:
+      - name: nginx-config
+        configMap:
+          name: liferay-nginx-config

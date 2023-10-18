@@ -1,0 +1,158 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: liferay-portal
+  namespace: liferay
+  labels:
+    app: liferay
+    tier: portal
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8080
+  selector:
+    app: liferay
+    tier: portal
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: liferay-data
+  namespace: liferay
+  labels:
+    app: liferay
+    tier: portal
+spec:
+  storageClassName: longhorn
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 2Gi
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: liferay-config
+  namespace: liferay
+  labels:
+    app: liferay
+    tier: portal
+spec:
+  storageClassName: longhorn
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 500Mi
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: liferay-portal
+  namespace: liferay
+  labels:
+    app: liferay
+    tier: portal
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: liferay
+      tier: portal
+  strategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      namespace: liferay
+      labels:
+        app: liferay
+        tier: portal
+    spec:
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        fsGroupChangePolicy: "OnRootMismatch"
+
+      initContainers:
+        - name: liferay-init-config
+          image: alpine
+          workingDir: /mnt/liferay
+          volumeMounts:
+          - name: liferay-config-pvc
+            mountPath: /mnt/liferay
+          - name: portal-config
+            subPath: portal-ext.properties
+            mountPath: /tmp/portal-ext.properties
+          - name: search-config
+            subPath: com.liferay.portal.search.elasticsearch7.configuration.ElasticsearchConfiguration.config
+            mountPath: /tmp/com.liferay.portal.search.elasticsearch7.configuration.ElasticsearchConfiguration.config
+          command: [/bin/sh, -c]
+          args:
+            - |
+              /bin/mkdir -p /mnt/liferay/files/osgi/configs
+              cp /tmp/com.liferay.portal.search.elasticsearch7.configuration.ElasticsearchConfiguration.config /mnt/liferay/files/osgi/configs/com.liferay.portal.search.elasticsearch7.configuration.ElasticsearchConfiguration.config
+              cp /tmp/portal-ext.properties /mnt/liferay/files/portal-ext.properties
+
+      containers:
+      - name: liferay
+        image: liferay/portal:7.3.7-ga8
+        env:
+        - name: LIFERAY_JAVA_OPTS
+          value: -Xms2764m -Xmx2764m
+        - name: LIFERAY_MODULE_PERIOD_FRAMEWORK_PERIOD_PROPERTIES_PERIOD_OSGI_PERIOD_CONSOLE
+          value: 0.0.0.0:11311
+        - name: LIFERAY_WEB_PERIOD_SERVER_PERIOD_DISPLAY_PERIOD_NODE
+          value: "true"
+        - name: LIFERAY_REDIRECT_PERIOD_URL_PERIOD_SECURITY_PERIOD_MODE
+          value: "domain"
+        resources:
+          requests:
+            memory: "2800Mi"
+            ephemeral-storage: 1Gi
+          limits:
+            memory: "2900Mi"
+            ephemeral-storage: 1Gi
+        ports:
+        - containerPort: 11311
+        - containerPort: 8080
+        readinessProbe:
+          httpGet:
+            path: "/c/portal/layout"
+            port: 8080
+          initialDelaySeconds: 120
+          periodSeconds: 15
+          failureThreshold: 3
+          successThreshold: 3
+        livenessProbe:
+          tcpSocket:
+            port: 8080
+          initialDelaySeconds: 120
+          periodSeconds: 20
+          failureThreshold: 3
+          successThreshold: 1
+        volumeMounts:
+        - name: liferay-data-pvc
+          mountPath: /opt/liferay/data
+        - name: liferay-config-pvc
+          mountPath: /mnt/liferay
+
+      restartPolicy: Always
+
+      volumes:
+      - name: liferay-data-pvc
+        persistentVolumeClaim:
+          claimName: liferay-data
+      - name: liferay-config-pvc
+        persistentVolumeClaim:
+          claimName: liferay-config
+      - name: portal-config
+        configMap:
+          name: liferay-portal-config
+      - name: search-config
+        configMap:
+          name: liferay-search-config

@@ -1,0 +1,54 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: liferay
+
+---
+# Secret to store Liferay MySQL DB credentials
+apiVersion: v1
+kind: Secret
+metadata:
+  name: liferay-db-creds
+  namespace: liferay
+  labels:
+    app: liferay
+    tier: mysql
+type: Opaque
+data:
+  dbname: bGlmZXJheQ==
+  username: bGlmZXJheQ==
+  password: bGlmZXJheS5wdy4xMjM0NTY3ODkw
+  # $ echo -n 'liferay' | base64
+  # bGlmZXJheQ==
+  # $ echo -n 'liferay.pw.1234567890' | base64
+  # bGlmZXJheS5wdy4xMjM0NTY3ODkw
+
+---
+# Secret to store MySQL DB root credentials
+apiVersion: v1
+kind: Secret
+metadata:
+  name: liferay-db-root
+  namespace: liferay
+  labels:
+    app: liferay
+    tier: mysql
+type: Opaque
+data:
+  password: bGlmZXJheS5yb290LjEyMzQ1Njc4OTA=
+  # $ echo -n 'liferay.root.1234567890' | base64
+  # bGlmZXJheS5yb290LjEyMzQ1Njc4OTA=
+
+
+# The below config files can be stored as configMaps with kubectl,
+# using the `create-configmaps.sh` script in the project root.
+#
+# Liferay Portal configuration file:
+#   portal-ext.properties
+#
+# Elasticsearch Connector OSGi configuration file:
+#   com.liferay.portal.search.elasticsearch7.configuration.ElasticsearchConfiguration.config
+#
+# Nginx config file:
+#   nginx.conf
+#

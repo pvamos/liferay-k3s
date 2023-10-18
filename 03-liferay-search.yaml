@@ -1,0 +1,98 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: liferay-search
+  namespace: liferay
+  labels:
+    app: liferay
+    tier: search
+spec:
+  ports:
+  - name: search-9200
+    port: 9200
+  - name: search-9300
+    port: 9300
+  selector:
+    app: liferay
+    tier: search
+
+---
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: liferay-search-pvc
+  namespace: liferay
+  labels:
+    app: liferay
+    tier: search
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: liferay-search
+  namespace: liferay
+  labels:
+    app: liferay
+    tier: search
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: liferay
+      tier: search
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      namespace: liferay
+      labels:
+        app: liferay
+        tier: search
+    spec:
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        fsGroupChangePolicy: "OnRootMismatch"
+      containers:
+      - name: search
+        image: liferaycloud/elasticsearch:7.17.13-5.2.0
+        resources:
+          requests:
+            memory: "2048Mi"
+          limits:
+            memory: "2560Mi"
+        env:
+        - name: ES_JAVA_OPTS
+          value: -Xms2g -Xmx2g
+        - name: LCP_PROJECT_ENVIRONMENT
+          value: local
+        - name: LCP_SERVICE_ID
+          value: search
+        - name: LCP_SERVICE_SCALE
+          value: "1"
+        - name: cluster.routing.allocation.disk.threshold_enabled
+          value: "false"
+        - name: discovery.type
+          value: single-node
+        ports:
+        - containerPort: 9200
+        - containerPort: 9300
+        volumeMounts:
+        - mountPath: /data
+          name: liferay-search-storage
+      restartPolicy: Always
+      volumes:
+      - name: liferay-search-storage
+        persistentVolumeClaim:
+          claimName: liferay-search-pvc
+

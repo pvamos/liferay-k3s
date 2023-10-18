@@ -6,7 +6,7 @@
 ## Deploy Liferay Community Edition (CE) Portal to a K3s Kubernetes cluster runnig on Alpine linux
 
 
-***Simple Kubernetes YAML Manifests and a bash script to deploy a Liferay CE Portal 7.3 Development environment to a K3s v1.27.5 custer running on Alpine Linux 3.18 nodes. Development environment with real Kubernetes to evaluate Liferay Portal features, in a very resource effectient way.***
+***Simple Kubernetes YAML Manifests and bash scripts to deploy and tear down a Liferay CE Portal 7.3 Development environment to a K3s v1.27.5 custer running on Alpine Linux 3.18 nodes. Development environment with real Kubernetes to evaluate Liferay Portal features, in a very resource effectient way.***
 
 ![liferay-k3s Liferay Portal illustration](images/liferay-portal.png)
 
